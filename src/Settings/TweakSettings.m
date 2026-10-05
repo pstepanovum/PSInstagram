@@ -20,12 +20,6 @@
         @{
             @"header": @"",
             @"rows": @[
-                [PSISetting linkCellWithTitle:@"PSInstagram on GitHub" subtitle:@"Instagram without the addictive parts" icon:[PSISymbol symbolWithName:@"leaf.circle.fill" color:[UIColor systemGreenColor] size:20.0] url:@"https://github.com/pstepanovum/PSInstagram"]
-            ]
-        },
-        @{
-            @"header": @"",
-            @"rows": @[
                 [PSISetting navigationCellWithTitle:@"General"
                                            subtitle:@""
                                                icon:[PSISymbol symbolWithName:@"gear"]
@@ -299,12 +293,10 @@
             ]
         },
         @{
-            @"header": @"Credits",
+            @"header": @"About",
             @"rows": @[
-                [PSISetting linkCellWithTitle:@"Developer" subtitle:@"Pavel Stepanov" icon:[PSISymbol symbolWithName:@"person.crop.circle"] url:@"https://github.com/pstepanovum"],
-                [PSISetting linkCellWithTitle:@"View Repo" subtitle:@"View the tweak's source code on GitHub" icon:[PSISymbol symbolWithName:@"chevron.left.forwardslash.chevron.right"] url:@"https://github.com/pstepanovum/PSInstagram"],
-                [PSISetting linkCellWithTitle:@"Based on SCInsta" subtitle:@"By SoCuul" icon:[PSISymbol symbolWithName:@"heart"] url:@"https://github.com/SoCuul/SCInsta"],
-                [PSISetting linkCellWithTitle:@"Originally BHInstagram" subtitle:@"By BandarHL" icon:[PSISymbol symbolWithName:@"heart"] url:@"https://github.com/BandarHL/BHInstagram"]
+                [PSISetting linkCellWithTitle:@"GitHub" subtitle:@"@pstepanovum" icon:[PSISymbol symbolWithName:@"person.crop.circle"] url:@"https://github.com/pstepanovum"],
+                [PSISetting linkCellWithTitle:@"Repository" subtitle:@"pstepanovum/PSInstagram" icon:[PSISymbol symbolWithName:@"chevron.left.forwardslash.chevron.right"] url:@"https://github.com/pstepanovum/PSInstagram"]
             ],
             @"footer": [NSString stringWithFormat:@"PSInstagram %@\n\nInstagram v%@", PSIVersionString, [PSIUtils IGVersionString]]
         }

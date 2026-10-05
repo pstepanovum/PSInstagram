@@ -32,11 +32,26 @@ static NSString *const PSIBackupMarkerKey = @"PSInstagramSettingsBackupMarker";
 }
 
 + (NSDictionary *)keychainQuery {
+    return [self keychainQueryWithService:PSIBackupService account:PSIBackupAccount];
+}
+
++ (NSDictionary *)keychainQueryWithService:(NSString *)service account:(NSString *)account {
     return @{
         (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrService: PSIBackupService,
-        (__bridge id)kSecAttrAccount: PSIBackupAccount
+        (__bridge id)kSecAttrService: service,
+        (__bridge id)kSecAttrAccount: account
     };
+}
+
++ (NSData *)backupDataWithService:(NSString *)service account:(NSString *)account {
+    NSMutableDictionary *query = [[self keychainQueryWithService:service account:account] mutableCopy];
+    query[(__bridge id)kSecReturnData] = @YES;
+    query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
+
+    CFTypeRef result = NULL;
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)query, &result) != errSecSuccess || !result) return nil;
+
+    return (__bridge_transfer NSData *)result;
 }
 
 + (void)save {
@@ -75,15 +90,11 @@ static NSString *const PSIBackupMarkerKey = @"PSInstagramSettingsBackupMarker";
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if ([defaults boolForKey:PSIBackupMarkerKey]) return;
 
-    NSMutableDictionary *query = [[self keychainQuery] mutableCopy];
-    query[(__bridge id)kSecReturnData] = @YES;
-    query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
+    // Fall back to a backup made before the SCInsta -> PSInstagram rename
+    NSData *data = [self backupDataWithService:PSIBackupService account:PSIBackupAccount]
+        ?: [self backupDataWithService:@"SCInsta" account:@"SCInstaSettingsBackup"];
 
-    CFTypeRef result = NULL;
-    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
-
-    if (status == errSecSuccess && result) {
-        NSData *data = (__bridge_transfer NSData *)result;
+    if (data) {
         NSDictionary *values = [NSPropertyListSerialization propertyListWithData:data options:0 format:nil error:nil];
 
         if ([values isKindOfClass:[NSDictionary class]]) {
