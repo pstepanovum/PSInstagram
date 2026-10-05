@@ -6,6 +6,8 @@ PSInstagram is an iOS tweak that turns Instagram into a messaging and people-fin
 
 Where the feed used to be, there is a small mental math game instead. It levels up as you go, from `45 + 41` to logarithms and derivatives.
 
+Sister projects: [PSLinkedIn](https://github.com/pstepanovum/PSLinkedIn) and [PSYoutube](https://github.com/pstepanovum/PSYoutube), the same idea for other apps.
+
 ---
 
 ## What you get
