@@ -1,0 +1,27 @@
+{
+    "PSIUtils: Bool Pref": {
+		"prefix": "psibool",
+		"body": [
+            "if ([PSIUtils getBoolPref:@\"${1:key}\"]) $0"
+		]
+	},
+    "PSIUtils: String Pref": {
+		"prefix": "psistring",
+		"body": [
+            "if ([[PSIUtils getStringPref:@\"${1:key}\"] isEqualToString:@\"${2:string}\"]) $0"
+		]
+	},
+
+	"PSIUtils: Log": {
+		"prefix": "psilog",
+		"body": [
+            "PSILog($0);"
+		]
+	},
+	"PSIUtils: Log Id": {
+		"prefix": "psilogid",
+		"body": [
+            "PSILogId(@\"${1:prefix}\", $0);"
+		]
+	}
+}

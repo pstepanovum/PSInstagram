@@ -1,0 +1,10 @@
+Package: com.pstepanovum.psinstagram
+Name: PSInstagram
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Distraction-free Instagram: no feed, no reels, no suggestions.
+Homepage: https://github.com/pstepanovum/PSInstagram
+Maintainer: Pavel Stepanov
+Author: Pavel Stepanov
+Section: Tweaks
+Depends: mobilesubstrate
