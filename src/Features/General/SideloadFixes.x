@@ -201,14 +201,41 @@ static void PSILogKeychainStatus(const char *function, OSStatus status, CFDictio
     NSLog(@"[PSInstagram] %s failed with status %d (requested access group: %@)", function, (int)status, group);
 }
 
+static OSStatus (*orig_SecItemUpdate)(CFDictionaryRef, CFDictionaryRef);
+
+// Apps signed with the same team share our access group, so an item with the same service and
+// account may already exist without our group tag (left by another sideloaded copy of the app).
+// Queries for the original group can't see it, and adding fails as a duplicate, so the app could
+// never store it (SoundCloud's login failed this way). Take the existing item over instead.
+static OSStatus PSIReplaceUntaggedDuplicate(NSDictionary *item) {
+    NSArray *primaryKeys = @[(__bridge id)kSecClass, (__bridge id)kSecAttrService, (__bridge id)kSecAttrAccount, (__bridge id)kSecAttrServer,
+                             (__bridge id)kSecAttrProtocol, (__bridge id)kSecAttrPort, (__bridge id)kSecAttrPath, (__bridge id)kSecAttrAccessGroup,
+                             (__bridge id)kSecAttrSynchronizable];
+
+    NSMutableDictionary *query = [NSMutableDictionary dictionary];
+    NSMutableDictionary *update = [NSMutableDictionary dictionary];
+    for (id key in item) {
+        if ([primaryKeys containsObject:key]) query[key] = item[key];
+        else if (![key hasPrefix:@"r_"] && ![key hasPrefix:@"m_"] && ![key hasPrefix:@"u_"]) update[key] = item[key];
+    }
+
+    return orig_SecItemUpdate((__bridge CFDictionaryRef)query, (__bridge CFDictionaryRef)update);
+}
+
 static OSStatus (*orig_SecItemAdd)(CFDictionaryRef, CFTypeRef *);
 static OSStatus hook_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
     NSDictionary *remapped = PSIRemapAccessGroup(attributes);
     OSStatus status = orig_SecItemAdd(remapped ? (__bridge CFDictionaryRef)remapped : attributes, result);
 
+    if (status == errSecDuplicateItem && remapped[(__bridge id)kSecAttrDescription]) {
+        status = PSIReplaceUntaggedDuplicate(remapped);
+        if (result) *result = NULL;
+    }
+
     PSILogKeychainStatus("SecItemAdd", status, attributes);
     return status;
 }
+
 
 static OSStatus (*orig_SecItemCopyMatching)(CFDictionaryRef, CFTypeRef *);
 static OSStatus hook_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
@@ -219,7 +246,6 @@ static OSStatus hook_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *resul
     return status;
 }
 
-static OSStatus (*orig_SecItemUpdate)(CFDictionaryRef, CFDictionaryRef);
 static OSStatus hook_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
     NSDictionary *remappedQuery = PSIRemapAccessGroup(query);
     NSDictionary *remappedAttributes = PSIRemapAccessGroup(attributesToUpdate);
