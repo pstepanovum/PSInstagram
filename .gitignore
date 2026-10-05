@@ -58,3 +58,6 @@ src/**/wip.xm
 
 # Signing certificates (never commit)
 certs
+
+# macOS custom folder icons
+Icon?
