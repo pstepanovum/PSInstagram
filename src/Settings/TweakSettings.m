@@ -1,6 +1,7 @@
 #import "TweakSettings.h"
 #import "PSISettingsBackup.h"
 #import "../Features/Feed/PSIMathGame.h"
+#import "../Features/Feed/PSIWordGame.h"
 
 @implementation PSITweakSettings
 
@@ -73,18 +74,19 @@
                                             ]
                                         }]
                 ],
-                [PSISetting navigationCellWithTitle:@"Math game"
+                [PSISetting navigationCellWithTitle:@"Brain break"
                                            subtitle:@""
                                                icon:[PSISymbol symbolWithName:@"function"]
                                         navSections:@[@{
                                             @"header": @"",
-                                            @"footer": @"Shown on the home tab while the feed is hidden. Every 5 correct answers is a new level with harder problems.",
+                                            @"footer": @"Shown on the home tab while the feed is hidden. Switch between the math and word games at the top.",
                                             @"rows": @[
-                                                [PSISetting switchCellWithTitle:@"Show math game on home" subtitle:@"Solve problems instead of scrolling" defaultsKey:@"math_game"]
+                                                [PSISetting switchCellWithTitle:@"Show games on home" subtitle:@"Solve a problem or guess a word instead of scrolling" defaultsKey:@"math_game"]
                                             ]
                                         },
                                         @{
-                                            @"header": @"Progress",
+                                            @"header": @"Math",
+                                            @"footer": @"Every 5 correct answers is a new level with harder problems.",
                                             @"rows": @[
                                                 [PSISetting staticCellWithTitle:[NSString stringWithFormat:@"Level %ld", (long)PSIMathGame.level]
                                                                        subtitle:[NSString stringWithFormat:@"%ld solved · best streak %ld", (long)PSIMathGame.totalSolved, (long)PSIMathGame.bestStreak]
@@ -93,6 +95,20 @@
                                                                        subtitle:@""
                                                                            icon:nil
                                                                          action:^(void) { [PSIMathGame resetProgress]; [PSISettingsBackup save]; }
+                                                ]
+                                            ]
+                                        },
+                                        @{
+                                            @"header": @"Words",
+                                            @"footer": @"Guess the five-letter word in six tries. Green letters are in the right spot, orange ones are in the word but somewhere else. After each round, tap Define to look the word up in the iOS dictionary.",
+                                            @"rows": @[
+                                                [PSISetting staticCellWithTitle:[NSString stringWithFormat:@"%ld won", (long)PSIWordGame.won]
+                                                                       subtitle:PSIWordGame.statsDescription
+                                                                           icon:[PSISymbol symbolWithName:@"textformat.abc"]],
+                                                [PSISetting buttonCellWithTitle:@"Reset progress"
+                                                                       subtitle:@""
+                                                                           icon:nil
+                                                                         action:^(void) { [PSIWordGame resetProgress]; [PSISettingsBackup save]; }
                                                 ]
                                             ]
                                         }]

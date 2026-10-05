@@ -3,6 +3,7 @@
 #import "PSISetting.h"
 #import "TweakSettings.h"
 #import "../Features/Feed/PSIMathGame.h"
+#import "../Features/Feed/PSIWordGame.h"
 
 static NSString *const PSIBackupService = @"PSInstagram";
 static NSString *const PSIBackupAccount = @"PSInstagramSettingsBackup";
@@ -27,6 +28,8 @@ static NSString *const PSIBackupMarkerKey = @"PSInstagramSettingsBackupMarker";
     [self collectKeysFromSections:[PSITweakSettings sections] into:keys];
     [keys addObjectsFromArray:[[PSITweakSettings menus] allKeys]];
     [keys addObjectsFromArray:PSIMathGame.progressKeys];
+    [keys addObjectsFromArray:PSIWordGame.progressKeys];
+    [keys addObject:@"brain_break_game"];
 
     return keys;
 }

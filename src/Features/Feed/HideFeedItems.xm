@@ -335,3 +335,29 @@ static NSArray *removeItemsInList(NSArray *list, BOOL isFeed) {
     return;
 }
 %end
+// "No posts yet": shown by the home feed once every item in it is hidden. Profiles use the same view, so only the home feed's is hidden
+static BOOL PSIIsInMainFeed(UIView *view) {
+    for (UIResponder *responder = view.nextResponder; responder; responder = responder.nextResponder) {
+        if ([responder isKindOfClass:%c(IGMainFeedViewController_objc)]) return YES;
+        if ([responder isKindOfClass:[UINavigationController class]]) return NO;
+    }
+
+    return NO;
+}
+
+@interface IGEmptyFeedView : UIView
+@end
+
+%hook IGEmptyFeedView
+- (void)didMoveToWindow {
+    %orig;
+
+    if (self.window && [PSIUtils getBoolPref:@"hide_entire_feed"] && PSIIsInMainFeed(self)) self.hidden = YES;
+}
+
+- (void)layoutSubviews {
+    %orig;
+
+    if ([PSIUtils getBoolPref:@"hide_entire_feed"] && PSIIsInMainFeed(self)) self.hidden = YES;
+}
+%end

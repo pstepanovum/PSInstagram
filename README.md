@@ -4,7 +4,7 @@
 
 PSInstagram is an iOS tweak that turns Instagram into a messaging and people-finding app. The feed, reels, explore grid, suggestions and ads are gone by default, so there is nothing left to scroll. What stays: your DMs, your profile, posting, and search for finding and following people.
 
-Where the feed used to be, there is a small mental math game instead. It levels up as you go, from `45 + 41` to logarithms and derivatives.
+Where the feed used to be, there are two small games instead: mental math that levels up from `45 + 41` to logarithms and derivatives, and a five-letter word game for practicing English.
 
 Sister projects: [PSLinkedIn](https://github.com/pstepanovum/PSLinkedIn) and [PSYoutube](https://github.com/pstepanovum/PSYoutube), the same idea for other apps.
 
@@ -27,10 +27,18 @@ Every option can still be changed in the PSInstagram settings.
 - Settings are backed up to the iOS keychain and restored automatically after a reinstall
 - Instagram's crash-recovery "safe mode" is disabled, so it can't reset anything
 
-### Brain break (math game)
-- Shown on the home tab while the feed is hidden
+### Brain break
+Shown on the home tab while the feed is hidden. Switch between the two games at the top.
+
+**Math**
 - Five correct answers per level, with new problem types as you level up: `+`, `−`, `×`, missing numbers, `÷`, mixed operations, squares, powers, percentages, logarithms, roots, derivatives and integrals
-- Level and stats survive reinstalls, and you can turn it off in settings
+
+**Words**
+- Guess the five-letter word in six tries. Green letters are in the right spot, orange ones are in the word but somewhere else
+- Answers are common English words, guesses are checked against the iOS dictionary, and after each round **Define** opens the word in the iOS dictionary
+- Its own on-screen keyboard shows which letters you've ruled out
+
+Progress and stats for both games survive reinstalls, and the games can be turned off in settings.
 
 ### Everything else from SCInsta
 PSInstagram keeps the full SCInsta feature set: downloading posts, reels and stories, keeping deleted messages, disabling read receipts and typing status, confirmation prompts for likes, follows and calls, tab bar customization, and more.

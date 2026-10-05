@@ -1,6 +1,7 @@
 #import "../../Utils.h"
 #import "../../Settings/PSISettingsBackup.h"
 #import "PSIMathGame.h"
+#import "PSIWordGameView.h"
 
 // Mental math game in place of the (hidden) home feed
 
@@ -19,11 +20,6 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (!self) return nil;
-
-    UILabel *titleLabel = [UILabel new];
-    titleLabel.text = @"Brain break";
-    titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
-    titleLabel.textColor = [UIColor secondaryLabelColor];
 
     self.statusLabel = [UILabel new];
     self.statusLabel.font = [UIFont monospacedDigitSystemFontOfSize:13 weight:UIFontWeightRegular];
@@ -68,7 +64,7 @@
     UIStackView *buttons = [[UIStackView alloc] initWithArrangedSubviews:@[skipButton, checkButton]];
     buttons.spacing = 32;
 
-    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, self.statusLabel, self.progressView, self.problemLabel, self.answerField, self.feedbackLabel, buttons]];
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[self.statusLabel, self.progressView, self.problemLabel, self.answerField, self.feedbackLabel, buttons]];
     stack.axis = UILayoutConstraintAxisVertical;
     stack.alignment = UIStackViewAlignmentCenter;
     stack.spacing = 12;
@@ -179,6 +175,70 @@
 
 ///////////////////////////////////////////////////////////
 
+// "Brain break" header with a switch between the math and word games
+static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
+
+@interface PSIBrainBreakView : UIView
+@property (nonatomic, strong) PSIMathGameView *mathGame;
+@property (nonatomic, strong) PSIWordGameView *wordGame;
+@end
+
+@implementation PSIBrainBreakView
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (!self) return nil;
+
+    UILabel *titleLabel = [UILabel new];
+    titleLabel.text = @"Brain break";
+    titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
+    titleLabel.textColor = [UIColor secondaryLabelColor];
+
+    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Math", @"Words"]];
+    picker.selectedSegmentIndex = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakGameKey] == 1 ? 1 : 0;
+    [picker addTarget:self action:@selector(gameChanged:) forControlEvents:UIControlEventValueChanged];
+    [picker.widthAnchor constraintEqualToConstant:180].active = YES;
+
+    self.mathGame = [PSIMathGameView new];
+    self.wordGame = [PSIWordGameView new];
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, picker, self.mathGame, self.wordGame]];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = 12;
+    [stack setCustomSpacing:20 afterView:picker];
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [self addSubview:stack];
+
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.topAnchor constraintEqualToAnchor:self.topAnchor],
+        [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
+        [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
+        [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+        [self.mathGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
+        [self.wordGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor]
+    ]];
+
+    [self showGame:picker.selectedSegmentIndex];
+
+    return self;
+}
+
+- (void)gameChanged:(UISegmentedControl *)picker {
+    [[NSUserDefaults standardUserDefaults] setInteger:picker.selectedSegmentIndex forKey:PSIBrainBreakGameKey];
+    [self showGame:picker.selectedSegmentIndex];
+}
+
+- (void)showGame:(NSInteger)index {
+    [self endEditing:YES];
+    self.mathGame.hidden = index != 0;
+    self.wordGame.hidden = index != 1;
+}
+
+@end
+
+///////////////////////////////////////////////////////////
+
 @interface IGMainFeedViewController_objc : UIViewController
 @end
 
@@ -201,9 +261,9 @@ static NSInteger const PSIMathGameViewTag = 0x5C1;
         return;
     }
 
-    NSLog(@"[PSInstagram] Adding math game to home feed");
+    NSLog(@"[PSInstagram] Adding brain break games to home feed");
 
-    PSIMathGameView *game = [PSIMathGameView new];
+    PSIBrainBreakView *game = [PSIBrainBreakView new];
     game.tag = PSIMathGameViewTag;
     game.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:game];
