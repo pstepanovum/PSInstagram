@@ -10,7 +10,7 @@
 #   certs/dev.mobileprovision          provisioning profile for that certificate
 #   certs/p12-password                 certificate password (plain text, no newline)
 #
-# Overridable with environment variables: IPA, P12, PROFILE, P12_PASSWORD_FILE, DEVICE
+# Overridable with environment variables: IPA, P12, PROFILE, P12_PASSWORD_FILE, DEVICE, BUNDLE_ID
 
 set -e
 
@@ -46,9 +46,9 @@ for file in "$IPA" "$P12" "$PROFILE" "$P12_PASSWORD_FILE"; do
     [ -f "$file" ] || fail "$file not found"
 done
 
-# The profile only allows one bundle ID, so the app is renamed to it
-BUNDLE_ID="$(security cms -D -i "$PROFILE" | plutil -extract Entitlements.application-identifier raw -o - - | cut -d. -f2-)"
-[ -n "$BUNDLE_ID" ] || fail "Could not read the bundle ID from $PROFILE"
+# Own bundle ID, so it installs next to the official app and other sideloaded apps.
+# The signature still uses the profile's app ID; iOS only requires that one to match.
+BUNDLE_ID="${BUNDLE_ID:-com.pstepanovum.psinstagram}"
 
 # Build
 if [ "$CLEAN" == 1 ]; then
@@ -68,9 +68,21 @@ cyan -i "$IPA" -o "$UNSIGNED" -f .theos/obj/debug/PSInstagram.dylib .theos/obj/d
 # App extensions would each need their own bundle ID in the profile
 zip -q -d "$UNSIGNED" 'Payload/Instagram.app/PlugIns/*' 'Payload/Instagram.app/Extensions/*' || true
 
+# Minimal entitlements from the profile. Some reseller profiles grant wildcards as plain strings
+# (e.g. associated-domains = "*"), which crash system frameworks that expect arrays.
+ENTITLEMENTS="$(mktemp -t entitlements).plist"
+security cms -D -i "$PROFILE" | python3 -c '
+import plistlib, sys
+keep = {"application-identifier", "com.apple.developer.team-identifier", "keychain-access-groups", "get-task-allow", "aps-environment"}
+entitlements = plistlib.loads(sys.stdin.buffer.read())["Entitlements"]
+with open(sys.argv[1], "wb") as file:
+    plistlib.dump({key: value for key, value in entitlements.items() if key in keep}, file)
+' "$ENTITLEMENTS"
+
 # Sign
 step "Signing as $BUNDLE_ID"
-zsign -k "$P12" -p "$(cat "$P12_PASSWORD_FILE")" -m "$PROFILE" -b "$BUNDLE_ID" -o "$SIGNED" "$UNSIGNED"
+zsign -k "$P12" -p "$(cat "$P12_PASSWORD_FILE")" -m "$PROFILE" -e "$ENTITLEMENTS" -b "$BUNDLE_ID" -o "$SIGNED" "$UNSIGNED"
+rm -f "$ENTITLEMENTS"
 rm -f "$UNSIGNED"
 
 if [ "$INSTALL" == 0 ]; then

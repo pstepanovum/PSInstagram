@@ -38,7 +38,7 @@ PSInstagram keeps the full SCInsta feature set: downloading posts, reels and sto
 - Hold **four fingers** anywhere on the screen for a second
 
 ## Installing
-PSInstagram is sideloaded: you inject it into a decrypted Instagram IPA and sign that with your own certificate.
+PSInstagram is sideloaded: you inject it into a decrypted Instagram IPA and sign that with your own certificate. It gets its own bundle ID (`com.pstepanovum.psinstagram`), so it installs next to the official Instagram app.
 
 ### Prerequisites
 - Xcode with the command-line tools, and [Homebrew](https://brew.sh)
@@ -61,7 +61,7 @@ mkdir -p packages certs
 Then add:
 - `packages/com.burbn.instagram.ipa`: the decrypted Instagram IPA
 - `certs/dev.p12`: your signing certificate
-- `certs/dev.mobileprovision`: its provisioning profile (the app is renamed to the bundle ID it allows)
+- `certs/dev.mobileprovision`: its provisioning profile
 - `certs/p12-password`: the certificate password
 
 `packages/` and `certs/` are ignored by git.
@@ -72,7 +72,10 @@ With your iPhone connected:
 ./dev.sh              # build, sign and install
 ./dev.sh --clean      # full rebuild first
 ./dev.sh --no-install # only create packages/PSInstagram-signed.ipa
+BUNDLE_ID=com.example.instagram ./dev.sh   # use a different bundle ID
 ```
+
+`dev.sh` signs with a minimal set of entitlements taken from your profile, because some reseller profiles contain malformed wildcard entitlements that crash apps.
 
 To build an unsigned IPA for another signing tool, or a `.deb` for jailbroken devices:
 ```sh
@@ -80,7 +83,6 @@ To build an unsigned IPA for another signing tool, or a `.deb` for jailbroken de
 ```
 
 ## Known limitations
-- **Sideloaded installs ask for your login after a cold start.** Instagram discards the saved session when it's relaunched; this is still being investigated.
 - **Updating over an existing install can fail**, in which case `dev.sh` reinstalls it. Your PSInstagram settings come back from the keychain, but Instagram needs a new login.
 - **App extensions are removed** (widgets, share sheet, rich notifications), because a single-app provisioning profile can't sign them.
 - **Use at your own risk.** Modified clients are against Instagram's terms of use, and frequent new logins from "new devices" can get an account temporarily restricted.

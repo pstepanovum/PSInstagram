@@ -56,6 +56,21 @@ static NSURL *PSIFallbackGroupContainer(NSString *groupIdentifier) {
 
 ///////////////////////////////////////////////////////////
 
+// Instagram works out which Meta app it is (Instagram, Threads, ...) from its bundle ID, and with an
+// unknown one it doesn't restore the logged-in session on launch. Report the original bundle ID
+// to Instagram's code; the app keeps its own bundle ID on the device.
+static NSString *const PSIOriginalBundleIdentifier = @"com.burbn.instagram";
+
+%hook NSBundle
+- (NSString *)bundleIdentifier {
+    if (self == [NSBundle mainBundle]) return PSIOriginalBundleIdentifier;
+
+    return %orig;
+}
+%end
+
+///////////////////////////////////////////////////////////
+
 // Pretend to be an App Store build, otherwise Instagram treats itself as an
 // outdated TestFlight beta and blocks the app with an update screen
 
@@ -170,7 +185,11 @@ static NSDictionary *PSIRemapAccessGroup(CFDictionaryRef query) {
         [mutableQuery removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
     }
 
-    mutableQuery[(__bridge id)kSecAttrDescription] = PSIGroupTag(group);
+    // Only password items have a description attribute (keys and certificates don't)
+    id itemClass = mutableQuery[(__bridge id)kSecClass];
+    if ([itemClass isEqual:(__bridge id)kSecClassGenericPassword] || [itemClass isEqual:(__bridge id)kSecClassInternetPassword]) {
+        mutableQuery[(__bridge id)kSecAttrDescription] = PSIGroupTag(group);
+    }
 
     return mutableQuery;
 }

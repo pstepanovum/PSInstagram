@@ -56,7 +56,9 @@ static NSString *const PSIBackupMarkerKey = @"PSInstagramSettingsBackupMarker";
 
 + (void)save {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *stored = [defaults persistentDomainForName:[[NSBundle mainBundle] bundleIdentifier]];
+    // The real bundle ID: -[NSBundle bundleIdentifier] is spoofed for Instagram's own code
+    NSString *bundleIdentifier = (__bridge NSString *)CFBundleGetIdentifier(CFBundleGetMainBundle());
+    NSDictionary *stored = [defaults persistentDomainForName:bundleIdentifier];
 
     // Only values the user actually set; registered defaults are applied on every launch anyway
     NSMutableDictionary *values = [NSMutableDictionary dictionary];
