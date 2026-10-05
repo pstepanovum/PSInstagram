@@ -35,7 +35,7 @@
         BOOL shouldHide = NO;
 
         if ([PSIUtils getBoolPref:@"no_suggested_users"]) {
-            if ([obj isKindOfClass:%c(IGProfileChainingModel)]) {
+            if ([obj isKindOfClass:%c(IGProfileChainingModel)] || [obj isKindOfClass:%c(IGProfileChainingShimmerModel)]) {
                 NSLog(@"[PSInstagram] Hiding suggested users: profile header");
 
                 shouldHide = YES;
@@ -259,5 +259,27 @@
     }
 
     return %orig(arg1, rows, allActions, overflowActions, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+}
+%end
+
+// "Discover people" panel under the profile buttons. Its suggestions are removed above, so opening it
+// (by the person button, or automatically after following someone) would only leave a blank gap
+// Demangled name: IGProfileActionBar.IGProfileActionBarController
+%hook _TtC18IGProfileActionBar28IGProfileActionBarController
+- (void)setChainingSelected:(BOOL)selected forActionBarView:(id)view fromUserAction:(long long)action {
+    %orig([PSIUtils getBoolPref:@"no_suggested_users"] ? NO : selected, view, action);
+}
+%end
+
+// Demangled name: IGProfileActionBar.IGProfileActionBarView
+%hook _TtC18IGProfileActionBar22IGProfileActionBarView
+- (void)layoutSubviews {
+    %orig;
+
+    if (![PSIUtils getBoolPref:@"no_suggested_users"]) return;
+
+    for (UIView *subview in ((UIView *)self).subviews) {
+        if ([subview.accessibilityIdentifier isEqualToString:@"user-detail-header-similar-accounts-button"]) subview.hidden = YES;
+    }
 }
 %end
