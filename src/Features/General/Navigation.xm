@@ -91,6 +91,9 @@ NSArray *filterSurfacesArray(NSArray *surfaces) {
     if ([[PSIUtils getStringPref:@"swipe_nav_tabs"] isEqualToString:@"enabled"]) return YES;
     else if ([[PSIUtils getStringPref:@"swipe_nav_tabs"] isEqualToString:@"disabled"]) return NO;
 
+    // Swiping from Home still reaches the hidden Reels tab
+    if ([PSIUtils getBoolPref:@"hide_reels_tab"]) return NO;
+
     return %orig;
 
 }

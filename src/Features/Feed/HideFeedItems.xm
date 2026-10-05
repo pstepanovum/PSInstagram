@@ -6,6 +6,18 @@ static NSArray *removeItemsInList(NSArray *list, BOOL isFeed) {
     NSMutableArray *filteredObjs = [NSMutableArray arrayWithCapacity:[originalObjs count]];
 
     for (id obj in originalObjs) {
+        // Hide entire feed: drop everything but the story tray, so new feed units (e.g. "Expiring Stories") can't slip through
+        if (isFeed && [PSIUtils getBoolPref:@"hide_entire_feed"]) {
+            if ([obj isKindOfClass:%c(IGStoryDataController)] && ![PSIUtils getBoolPref:@"hide_stories_tray"]) {
+                [filteredObjs addObject:obj];
+            }
+            else {
+                NSLog(@"[PSInstagram] Hiding feed item %@", NSStringFromClass([obj class]));
+            }
+
+            continue;
+        }
+
         // Remove suggested posts
         if (isFeed && [PSIUtils getBoolPref:@"no_suggested_post"]) {
 
@@ -80,15 +92,6 @@ static NSArray *removeItemsInList(NSArray *list, BOOL isFeed) {
         if (isFeed && [PSIUtils getBoolPref:@"hide_stories_tray"]) {
             if ([obj isKindOfClass:%c(IGStoryDataController)]) {
                 NSLog(@"[PSInstagram] Hiding stories tray");
-
-                continue;
-            }
-        }
-
-        // Hide entire feed
-        if (isFeed && [PSIUtils getBoolPref:@"hide_entire_feed"]) {
-            if ([obj isKindOfClass:%c(IGPostCreationManager)] || [obj isKindOfClass:%c(IGMedia)] || [obj isKindOfClass:%c(IGEndOfFeedDemarcatorModel)] || [obj isKindOfClass:%c(IGSpinnerLabelViewModel)]) {
-                NSLog(@"[PSInstagram] Hiding entire feed");
 
                 continue;
             }
