@@ -72,7 +72,7 @@ static char rowStaticRef[] = "row";
     
     if (![[[NSUserDefaults standardUserDefaults] objectForKey:@"PSInstagramFirstRun"] isEqualToString:PSIVersionString]) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"PSInstagram Settings Info"
-                                                                       message:@"In the future: Hold down on the three lines at the top right of your profile page, to re-open PSInstagram settings."
+                                                                       message:@"In the future: open Settings and activity and tap PSInstagram (top right), or hold four fingers anywhere on the screen, to re-open PSInstagram settings."
                                                                 preferredStyle:UIAlertControllerStyleAlert];
         
         [alert addAction:[UIAlertAction actionWithTitle:@"I understand!"
