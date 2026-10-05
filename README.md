@@ -14,8 +14,8 @@ Sister projects: [PSLinkedIn](https://github.com/pstepanovum/PSLinkedIn) and [PS
 
 ### Locked down by default
 A fresh install starts distraction-free, without any setup:
-- No home feed, no stories tray, no suggested posts, reels, accounts or Threads posts
-- No Reels tab, and reels can't be scrolled
+- No home feed, no stories tray, no suggested posts, reels, accounts or Threads posts. Hiding the feed blocks everything in it, so new sections Instagram adds later (like "Expiring Stories") are hidden too
+- No Reels tab, no swiping into it from Home, and reels can't be scrolled
 - No explore grid, topic pills, trending searches, or recents and suggestions under the search bar
 - No "Discover people" or "Suggested for you" on profiles
 - No ads, no Meta AI
