@@ -85,7 +85,7 @@ To build an unsigned IPA for another signing tool, or a `.deb` for jailbroken de
 ```
 
 ## Known limitations
-- **Updating over an existing install can fail**, in which case `dev.sh` reinstalls it. Your PSInstagram settings come back from the keychain, but Instagram needs a new login.
+- **Updating over an existing install can fail**, in which case `dev.sh` reinstalls it. Your PSInstagram settings come back from the keychain. Instagram may log you back in with your saved login info, or it may need a new login.
 - **App extensions are removed** (widgets, share sheet, rich notifications), because a single-app provisioning profile can't sign them.
 - **Use at your own risk.** Modified clients are against Instagram's terms of use, and frequent new logins from "new devices" can get an account temporarily restricted.
 
