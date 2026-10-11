@@ -10,12 +10,43 @@
 
 // Mental math game in place of the (hidden) home feed
 
-// Problems are typeset from LaTeX with iosMath. A tweak has no bundle of its own, so iosMath would look for its
-// fonts in Instagram's; dev.sh ships them in PSIMath.bundle inside the app instead
+// Problems are typeset from LaTeX with iosMath. Its fonts are built into the tweak (PSIMathFonts.S), so the tweak
+// works as a single dylib; they're written to the app's cache once and iosMath loads them from there
+extern const char psi_font_latinmodern_otf[], psi_font_latinmodern_otf_end[];
+extern const char psi_font_latinmodern_plist[], psi_font_latinmodern_plist_end[];
+extern const char psi_font_italic_otf[], psi_font_italic_otf_end[];
+
+static NSBundle *PSIMathFontBundle(void) {
+    static NSBundle *bundle;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSURL *caches = [[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;
+        NSURL *bundleURL = [caches URLByAppendingPathComponent:@"PSIMath.bundle" isDirectory:YES];
+        NSURL *fontsURL = [bundleURL URLByAppendingPathComponent:@"fonts" isDirectory:YES];
+        [[NSFileManager defaultManager] createDirectoryAtURL:fontsURL withIntermediateDirectories:YES attributes:nil error:nil];
+
+        NSDictionary<NSString *, NSData *> *files = @{
+            @"latinmodern-math.otf": [NSData dataWithBytesNoCopy:(void *)psi_font_latinmodern_otf length:psi_font_latinmodern_otf_end - psi_font_latinmodern_otf freeWhenDone:NO],
+            @"latinmodern-math.plist": [NSData dataWithBytesNoCopy:(void *)psi_font_latinmodern_plist length:psi_font_latinmodern_plist_end - psi_font_latinmodern_plist freeWhenDone:NO],
+            @"lmroman10-italic.otf": [NSData dataWithBytesNoCopy:(void *)psi_font_italic_otf length:psi_font_italic_otf_end - psi_font_italic_otf freeWhenDone:NO]
+        };
+
+        // Rewrite a file only if it's missing or differs in size (e.g. after a tweak update)
+        for (NSString *name in files) {
+            NSURL *fileURL = [fontsURL URLByAppendingPathComponent:name];
+            NSNumber *size = [[NSFileManager defaultManager] attributesOfItemAtPath:fileURL.path error:nil][NSFileSize];
+            if (size.unsignedIntegerValue != files[name].length) [files[name] writeToURL:fileURL atomically:YES];
+        }
+
+        bundle = [NSBundle bundleWithURL:bundleURL];
+    });
+
+    return bundle;
+}
+
 %hook MTFont
 + (NSBundle *)fontBundle {
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"PSIMath" ofType:@"bundle"];
-    return (path ? [NSBundle bundleWithPath:path] : nil) ?: %orig;
+    return PSIMathFontBundle() ?: %orig;
 }
 %end
 

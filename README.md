@@ -62,6 +62,13 @@ PSInstagram keeps the full SCInsta feature set: downloading posts, reels and sto
 ## Installing
 PSInstagram is sideloaded: you inject it into a decrypted Instagram IPA and sign that with your own certificate. It gets its own bundle ID (`com.pstepanovum.psinstagram`), so it installs next to the official Instagram app.
 
+### No Mac? Use the compiled tweak
+The whole tweak is a single file, `PSInstagram.dylib`, with the math fonts built in. Inject it into your own decrypted Instagram IPA while signing:
+- **On iPhone**, with [Feather](https://github.com/khcrysalis/Feather): import the IPA, add `PSInstagram.dylib` under the signing options' tweaks, then sign with your certificate
+- **On Windows or Mac**, with [Sideloadly](https://sideloadly.io): in Advanced options, choose your certificate and inject `PSInstagram.dylib`
+
+To build `PSInstagram.dylib` yourself, follow the steps below and run `./dev.sh --no-install`; it's at `.theos/obj/debug/PSInstagram.dylib`.
+
 ### Prerequisites
 - Xcode with the command-line tools, and [Homebrew](https://brew.sh)
 - [Theos](https://theos.dev/docs/installation) with the iOS 16.2 SDK in `~/theos/sdks` ([SDKs](https://github.com/xybp888/iOS-SDKs))

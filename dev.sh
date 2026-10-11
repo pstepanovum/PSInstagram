@@ -68,13 +68,6 @@ cyan -i "$IPA" -o "$UNSIGNED" -f .theos/obj/debug/PSInstagram.dylib .theos/obj/d
 # App extensions would each need their own bundle ID in the profile
 zip -q -d "$UNSIGNED" 'Payload/Instagram.app/PlugIns/*' 'Payload/Instagram.app/Extensions/*' || true
 
-# Math fonts for the LaTeX problems in the math game (iosMath), found through PSIMath.bundle
-FONTS_STAGING="$(mktemp -d)"
-FONTS_DIR="$FONTS_STAGING/Payload/Instagram.app/PSIMath.bundle/fonts"
-mkdir -p "$FONTS_DIR"
-cp modules/iosMath/iosMath/fonts/{latinmodern-math.otf,latinmodern-math.plist,lmroman10-italic.otf} "$FONTS_DIR/"
-(cd "$FONTS_STAGING" && zip -qr "$OLDPWD/$UNSIGNED" Payload)
-rm -rf "$FONTS_STAGING"
 
 # Minimal entitlements from the profile. Some reseller profiles grant wildcards as plain strings
 # (e.g. associated-domains = "*"), which crash system frameworks that expect arrays.
