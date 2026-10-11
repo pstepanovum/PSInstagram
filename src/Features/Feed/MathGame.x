@@ -2,13 +2,29 @@
 #import "../../Settings/PSISettingsBackup.h"
 #import "PSIMathGame.h"
 #import "PSIWordGameView.h"
+#import "MTMathUILabel.h"
+#import "MTFont.h"
+#import "MTFontManager.h"
 
 // Mental math game in place of the (hidden) home feed
+
+// Problems are typeset from LaTeX with iosMath. A tweak has no bundle of its own, so iosMath would look for its
+// fonts in Instagram's; dev.sh ships them in PSIMath.bundle inside the app instead
+%hook MTFont
++ (NSBundle *)fontBundle {
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"PSIMath" ofType:@"bundle"];
+    return (path ? [NSBundle bundleWithPath:path] : nil) ?: %orig;
+}
+%end
+
+static CGFloat const PSIMathFontSize = 40;
+static CGFloat const PSIMathMinFontSize = 20;
 
 @interface PSIMathGameView : UIView <UITextFieldDelegate>
 @property (nonatomic, strong) UILabel *statusLabel;
 @property (nonatomic, strong) UIProgressView *progressView;
 @property (nonatomic, strong) UILabel *problemLabel;
+@property (nonatomic, strong) MTMathUILabel *mathLabel;
 @property (nonatomic, strong) UITextField *answerField;
 @property (nonatomic, strong) UILabel *feedbackLabel;
 @property (nonatomic, strong) PSIMathProblem *problem;
@@ -34,6 +50,12 @@
     self.problemLabel.textColor = [UIColor labelColor];
     self.problemLabel.adjustsFontSizeToFitWidth = YES;
     self.problemLabel.minimumScaleFactor = 0.5;
+
+    self.mathLabel = [MTMathUILabel new];
+    self.mathLabel.labelMode = kMTMathUILabelModeDisplay;
+    self.mathLabel.textAlignment = kMTTextAlignmentCenter;
+    self.mathLabel.textColor = [UIColor labelColor];
+    self.mathLabel.fontSize = PSIMathFontSize;
 
     self.answerField = [UITextField new];
     self.answerField.keyboardType = UIKeyboardTypeNumberPad;
@@ -64,7 +86,7 @@
     UIStackView *buttons = [[UIStackView alloc] initWithArrangedSubviews:@[skipButton, checkButton]];
     buttons.spacing = 32;
 
-    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[self.statusLabel, self.progressView, self.problemLabel, self.answerField, self.feedbackLabel, buttons]];
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[self.statusLabel, self.progressView, self.mathLabel, self.problemLabel, self.answerField, self.feedbackLabel, buttons]];
     stack.axis = UILayoutConstraintAxisVertical;
     stack.alignment = UIStackViewAlignmentCenter;
     stack.spacing = 12;
@@ -77,7 +99,8 @@
         [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
         [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
         [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-        [self.problemLabel.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor]
+        [self.problemLabel.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor],
+        [self.mathLabel.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor]
     ]];
 
     // Tapping around the game closes the keyboard
@@ -86,6 +109,32 @@
     [self nextProblem];
 
     return self;
+}
+
+// Typeset the LaTeX version, shrinking it to fit; fall back to the plain text if it can't be typeset
+- (void)showProblem {
+    self.problemLabel.text = self.problem.text;
+
+    self.mathLabel.fontSize = PSIMathFontSize;
+    self.mathLabel.latex = self.problem.latex;
+
+    CGFloat maxWidth = UIScreen.mainScreen.bounds.size.width - 48;
+    while (self.mathLabel.intrinsicContentSize.width > maxWidth && self.mathLabel.fontSize > PSIMathMinFontSize) {
+        self.mathLabel.fontSize -= 2;
+    }
+
+    // The display list is only built during layout, so check that the LaTeX parsed and the math font loaded
+    BOOL typeset = self.problem.latex.length > 0 && !self.mathLabel.error && self.mathLabel.mathList && [MTFontManager fontManager].defaultFont;
+    if (!typeset) PSILog(@"Showing plain text: latex error %@, font %@", self.mathLabel.error, [MTFontManager fontManager].defaultFont);
+    self.mathLabel.hidden = !typeset;
+    self.problemLabel.hidden = typeset;
+}
+
+// The label draws with a fixed color, so redraw it when switching between light and dark mode
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+
+    self.mathLabel.textColor = [[UIColor labelColor] resolvedColorWithTraitCollection:self.traitCollection];
 }
 
 - (void)updateStatus {
@@ -97,7 +146,7 @@
 
 - (void)nextProblem {
     self.problem = [PSIMathGame newProblem];
-    self.problemLabel.text = self.problem.text;
+    [self showProblem];
     self.answerField.text = @"";
     self.locked = NO;
 

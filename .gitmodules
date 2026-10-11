@@ -1,3 +1,6 @@
 [submodule "modules/FLEXing"]
 	path = modules/FLEXing
 	url = https://github.com/SoCuul/FLEXing
+[submodule "modules/iosMath"]
+	path = modules/iosMath
+	url = https://github.com/kostub/iosMath

@@ -25,3 +25,12 @@ Licensed under the BSD 3-Clause License (see modules/fishhook/LICENSE)
 
 FLEXing (git submodule)
 https://github.com/SoCuul/FLEXing
+
+iosMath (git submodule)
+Copyright (c) 2013 MathChat
+https://github.com/kostub/iosMath
+Licensed under the MIT License
+
+Latin Modern Math and Latin Modern Roman (fonts shipped with the app, from iosMath)
+Copyright 2012-2014 B. Jackowski, P. Strzelczyk and P. Pianowski (on behalf of TeX Users Groups)
+Licensed under the GUST Font License (see modules/iosMath/iosMath/fonts/GUST-FONT-LICENSE.txt)

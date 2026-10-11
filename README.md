@@ -31,7 +31,8 @@ Every option can still be changed in the PSInstagram settings.
 Shown on the home tab while the feed is hidden. Switch between the two games at the top.
 
 **Math**
-- Five correct answers per level, with new problem types as you level up: `+`, `−`, `×`, missing numbers, `÷`, mixed operations, squares, powers, percentages, logarithms, roots, derivatives and integrals
+- Five correct answers per level, with new problem types as you level up: `+`, `−`, `×`, missing numbers, `÷`, mixed operations, squares, powers, percentages, logarithms, roots, derivatives, integrals, limits, sums, binomial coefficients, 2×2 and 3×3 determinants, matrix traces, Laplace transforms, Gamma, double and improper integrals, modular arithmetic and complex numbers
+- Problems are typeset from LaTeX with [iosMath](https://github.com/kostub/iosMath), in the Latin Modern math font, and every answer is a whole number you can type
 
 **Words**
 - Guess the five-letter word in six tries. Green letters are in the right spot, orange ones are in the word but somewhere else
@@ -104,6 +105,7 @@ Bundled libraries:
 - [FLEXing](https://github.com/SoCuul/FLEXing) / [FLEX](https://github.com/FLEXTool/FLEX): in-app debugging
 - [JGProgressHUD](https://github.com/JonasGessner/JGProgressHUD): progress overlays
 - [fishhook](https://github.com/facebook/fishhook): symbol rebinding for the keychain fixes
+- [iosMath](https://github.com/kostub/iosMath): LaTeX typesetting for the math game, with the Latin Modern Math font
 
 ## License
 [GNU General Public License v3.0](LICENSE), the same license as SCInsta.

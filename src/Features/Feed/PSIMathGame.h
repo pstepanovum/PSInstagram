@@ -6,6 +6,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface PSIMathProblem : NSObject
 
 @property (nonatomic, copy, readonly) NSString *text;
+// The same problem as LaTeX, for typeset display
+@property (nonatomic, copy, readonly) NSString *latex;
 @property (nonatomic, readonly) NSInteger answer;
 
 @end
