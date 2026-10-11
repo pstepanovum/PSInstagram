@@ -1,5 +1,6 @@
 #import "PSIPatternGameView.h"
 #import "PSIPatternGame.h"
+#import "PSIBrainBreak.h"
 #import "../../Settings/PSISettingsBackup.h"
 #import "MTMathUILabel.h"
 #import "MTFontManager.h"
@@ -188,6 +189,19 @@ static CGFloat const PSIPatternMinFontSize = 18;
     });
 }
 
+// A digit span can start while the game is hidden (Shuffle shows another game first), so show the number again
+// from the start once the game becomes visible, unless it's already been answered
+- (void)setHidden:(BOOL)hidden {
+    BOOL appearing = self.hidden && !hidden;
+    [super setHidden:hidden];
+
+    if (appearing && self.puzzle.kind == PSIPatternKindDigitSpan && !self.locked) {
+        self.puzzleID++;
+        self.answerField.text = @"";
+        [self showDigits];
+    }
+}
+
 // The label draws with a fixed color, so redraw it when switching between light and dark mode
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
@@ -206,6 +220,7 @@ static CGFloat const PSIPatternMinFontSize = 18;
 
         self.feedbackLabel.text = @" ";
         [self nextPuzzle];
+        [[NSNotificationCenter defaultCenter] postNotificationName:PSIBrainBreakPuzzleDoneNotification object:self];
     });
 }
 

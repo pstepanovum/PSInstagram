@@ -31,7 +31,7 @@ static NSString *const PSIBackupMarkerKey = @"PSInstagramSettingsBackupMarker";
     [keys addObjectsFromArray:PSIMathGame.progressKeys];
     [keys addObjectsFromArray:PSIWordGame.progressKeys];
     [keys addObjectsFromArray:PSIPatternGame.progressKeys];
-    [keys addObject:@"brain_break_game"];
+    [keys addObject:@"brain_break_mode"];
 
     return keys;
 }

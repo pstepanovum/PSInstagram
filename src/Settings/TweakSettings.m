@@ -80,7 +80,7 @@
                                                icon:[PSISymbol symbolWithName:@"function"]
                                         navSections:@[@{
                                             @"header": @"",
-                                            @"footer": @"Shown on the home tab while the feed is hidden. Switch between the math, word and pattern games at the top.",
+                                            @"footer": @"Shown on the home tab while the feed is hidden. Pick a game at the top, or Shuffle to get a different game after every puzzle.",
                                             @"rows": @[
                                                 [PSISetting switchCellWithTitle:@"Show games on home" subtitle:@"Solve a problem or guess a word instead of scrolling" defaultsKey:@"math_game"]
                                             ]
@@ -114,8 +114,8 @@
                                             ]
                                         },
                                         @{
-                                            @"header": @"Patterns",
-                                            @"footer": @"Find the next number in a sequence, or remember a number and type it back (sometimes backwards). New patterns unlock as you level up.",
+                                            @"header": @"IQ",
+                                            @"footer": @"Find the next number in a sequence, or remember a number and type it back (sometimes backwards). New puzzles unlock as you level up.",
                                             @"rows": @[
                                                 [PSISetting staticCellWithTitle:[NSString stringWithFormat:@"Level %ld", (long)PSIPatternGame.level]
                                                                        subtitle:PSIPatternGame.statsDescription

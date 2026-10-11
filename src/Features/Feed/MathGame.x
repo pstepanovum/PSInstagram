@@ -1,6 +1,7 @@
 #import "../../Utils.h"
 #import "../../Settings/PSISettingsBackup.h"
 #import "PSIMathGame.h"
+#import "PSIBrainBreak.h"
 #import "PSIWordGameView.h"
 #import "PSIPatternGameView.h"
 #import "MTMathUILabel.h"
@@ -162,6 +163,7 @@ static CGFloat const PSIMathMinFontSize = 20;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         self.feedbackLabel.text = @" ";
         [self nextProblem];
+        [[NSNotificationCenter defaultCenter] postNotificationName:PSIBrainBreakPuzzleDoneNotification object:self];
     });
 }
 
@@ -225,13 +227,21 @@ static CGFloat const PSIMathMinFontSize = 20;
 
 ///////////////////////////////////////////////////////////
 
-// "Brain break" header with a switch between the math and word games
-static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
+// "Brain break" header: Shuffle (a random game after every puzzle), or one game to stay on
+static NSString *const PSIBrainBreakModeKey = @"brain_break_mode";
+
+typedef NS_ENUM(NSInteger, PSIBrainBreakMode) {
+    PSIBrainBreakModeShuffle = 0,
+    PSIBrainBreakModeMath,
+    PSIBrainBreakModeWords,
+    PSIBrainBreakModeIQ
+};
 
 @interface PSIBrainBreakView : UIView
-@property (nonatomic, strong) PSIMathGameView *mathGame;
-@property (nonatomic, strong) PSIWordGameView *wordGame;
-@property (nonatomic, strong) PSIPatternGameView *patternGame;
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) NSArray<UIView *> *games;
+@property (nonatomic) PSIBrainBreakMode mode;
+@property (nonatomic) NSInteger currentGame;
 @end
 
 @implementation PSIBrainBreakView
@@ -240,22 +250,21 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
     self = [super initWithFrame:frame];
     if (!self) return nil;
 
-    UILabel *titleLabel = [UILabel new];
-    titleLabel.text = @"Brain break";
-    titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
-    titleLabel.textColor = [UIColor secondaryLabelColor];
+    self.titleLabel = [UILabel new];
+    self.titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
+    self.titleLabel.textColor = [UIColor secondaryLabelColor];
 
-    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Math", @"Words", @"Patterns"]];
-    NSInteger savedGame = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakGameKey];
-    picker.selectedSegmentIndex = savedGame >= 0 && savedGame <= 2 ? savedGame : 0;
-    [picker addTarget:self action:@selector(gameChanged:) forControlEvents:UIControlEventValueChanged];
-    [picker.widthAnchor constraintEqualToConstant:260].active = YES;
+    NSInteger savedMode = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakModeKey];
+    self.mode = savedMode >= PSIBrainBreakModeShuffle && savedMode <= PSIBrainBreakModeIQ ? savedMode : PSIBrainBreakModeShuffle;
 
-    self.mathGame = [PSIMathGameView new];
-    self.wordGame = [PSIWordGameView new];
-    self.patternGame = [PSIPatternGameView new];
+    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Shuffle", @"Math", @"Words", @"IQ"]];
+    picker.selectedSegmentIndex = self.mode;
+    [picker addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
+    [picker.widthAnchor constraintEqualToConstant:300].active = YES;
 
-    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, picker, self.mathGame, self.wordGame, self.patternGame]];
+    self.games = @[[PSIMathGameView new], [PSIWordGameView new], [PSIPatternGameView new]];
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:[@[self.titleLabel, picker] arrayByAddingObjectsFromArray:self.games]];
     stack.axis = UILayoutConstraintAxisVertical;
     stack.alignment = UIStackViewAlignmentCenter;
     stack.spacing = 12;
@@ -263,31 +272,60 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
     stack.translatesAutoresizingMaskIntoConstraints = NO;
     [self addSubview:stack];
 
-    [NSLayoutConstraint activateConstraints:@[
+    NSMutableArray *constraints = [@[
         [stack.topAnchor constraintEqualToAnchor:self.topAnchor],
         [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
         [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
-        [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-        [self.mathGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-        [self.wordGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-        [self.patternGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor]
-    ]];
+        [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor]
+    ] mutableCopy];
+    for (UIView *game in self.games) [constraints addObject:[game.widthAnchor constraintEqualToAnchor:stack.widthAnchor]];
+    [NSLayoutConstraint activateConstraints:constraints];
 
-    [self showGame:picker.selectedSegmentIndex];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(puzzleDone) name:PSIBrainBreakPuzzleDoneNotification object:nil];
+
+    self.currentGame = -1;
+    [self applyMode];
 
     return self;
 }
 
-- (void)gameChanged:(UISegmentedControl *)picker {
-    [[NSUserDefaults standardUserDefaults] setInteger:picker.selectedSegmentIndex forKey:PSIBrainBreakGameKey];
-    [self showGame:picker.selectedSegmentIndex];
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)modeChanged:(UISegmentedControl *)picker {
+    self.mode = picker.selectedSegmentIndex;
+    [[NSUserDefaults standardUserDefaults] setInteger:self.mode forKey:PSIBrainBreakModeKey];
+    [self applyMode];
+}
+
+- (void)applyMode {
+    if (self.mode == PSIBrainBreakModeShuffle) [self showRandomGame];
+    else [self showGame:self.mode - 1];
+}
+
+// Shuffle moves on to a different game after every puzzle
+- (void)puzzleDone {
+    if (self.mode == PSIBrainBreakModeShuffle) [self showRandomGame];
+}
+
+- (void)showRandomGame {
+    NSInteger game;
+    do {
+        game = arc4random_uniform((uint32_t)self.games.count);
+    } while (game == self.currentGame);
+
+    [self showGame:game];
 }
 
 - (void)showGame:(NSInteger)index {
     [self endEditing:YES];
-    self.mathGame.hidden = index != 0;
-    self.wordGame.hidden = index != 1;
-    self.patternGame.hidden = index != 2;
+    self.currentGame = index;
+
+    for (NSUInteger i = 0; i < self.games.count; i++) self.games[i].hidden = (NSInteger)i != index;
+
+    NSArray *names = @[@"Math", @"Words", @"IQ"];
+    self.titleLabel.text = self.mode == PSIBrainBreakModeShuffle ? [NSString stringWithFormat:@"Brain break · %@", names[index]] : @"Brain break";
 }
 
 @end

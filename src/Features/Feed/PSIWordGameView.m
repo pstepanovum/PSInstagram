@@ -1,5 +1,6 @@
 #import "PSIWordGameView.h"
 #import "PSIWordGame.h"
+#import "PSIBrainBreak.h"
 #import "../../Settings/PSISettingsBackup.h"
 
 static CGFloat const PSITileSize = 44;
@@ -320,6 +321,7 @@ static UIColor *PSIColorForState(PSILetterState state) {
 - (void)nextWord {
     [PSIWordGame startNewRound];
     [self reloadRound];
+    [[NSNotificationCenter defaultCenter] postNotificationName:PSIBrainBreakPuzzleDoneNotification object:self];
 }
 
 // iOS's built-in dictionary, so every round teaches a word
