@@ -2,6 +2,7 @@
 #import "PSISettingsBackup.h"
 #import "../Features/Feed/PSIMathGame.h"
 #import "../Features/Feed/PSIWordGame.h"
+#import "../Features/Feed/PSIPatternGame.h"
 
 @implementation PSITweakSettings
 
@@ -79,7 +80,7 @@
                                                icon:[PSISymbol symbolWithName:@"function"]
                                         navSections:@[@{
                                             @"header": @"",
-                                            @"footer": @"Shown on the home tab while the feed is hidden. Switch between the math and word games at the top.",
+                                            @"footer": @"Shown on the home tab while the feed is hidden. Switch between the math, word and pattern games at the top.",
                                             @"rows": @[
                                                 [PSISetting switchCellWithTitle:@"Show games on home" subtitle:@"Solve a problem or guess a word instead of scrolling" defaultsKey:@"math_game"]
                                             ]
@@ -109,6 +110,20 @@
                                                                        subtitle:@""
                                                                            icon:nil
                                                                          action:^(void) { [PSIWordGame resetProgress]; [PSISettingsBackup save]; }
+                                                ]
+                                            ]
+                                        },
+                                        @{
+                                            @"header": @"Patterns",
+                                            @"footer": @"Find the next number in a sequence, or remember a number and type it back (sometimes backwards). New patterns unlock as you level up.",
+                                            @"rows": @[
+                                                [PSISetting staticCellWithTitle:[NSString stringWithFormat:@"Level %ld", (long)PSIPatternGame.level]
+                                                                       subtitle:PSIPatternGame.statsDescription
+                                                                           icon:[PSISymbol symbolWithName:@"sparkles"]],
+                                                [PSISetting buttonCellWithTitle:@"Reset progress"
+                                                                       subtitle:@""
+                                                                           icon:nil
+                                                                         action:^(void) { [PSIPatternGame resetProgress]; [PSISettingsBackup save]; }
                                                 ]
                                             ]
                                         }]

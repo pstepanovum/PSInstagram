@@ -2,6 +2,7 @@
 #import "../../Settings/PSISettingsBackup.h"
 #import "PSIMathGame.h"
 #import "PSIWordGameView.h"
+#import "PSIPatternGameView.h"
 #import "MTMathUILabel.h"
 #import "MTFont.h"
 #import "MTFontManager.h"
@@ -230,6 +231,7 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
 @interface PSIBrainBreakView : UIView
 @property (nonatomic, strong) PSIMathGameView *mathGame;
 @property (nonatomic, strong) PSIWordGameView *wordGame;
+@property (nonatomic, strong) PSIPatternGameView *patternGame;
 @end
 
 @implementation PSIBrainBreakView
@@ -243,15 +245,17 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
     titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
     titleLabel.textColor = [UIColor secondaryLabelColor];
 
-    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Math", @"Words"]];
-    picker.selectedSegmentIndex = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakGameKey] == 1 ? 1 : 0;
+    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Math", @"Words", @"Patterns"]];
+    NSInteger savedGame = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakGameKey];
+    picker.selectedSegmentIndex = savedGame >= 0 && savedGame <= 2 ? savedGame : 0;
     [picker addTarget:self action:@selector(gameChanged:) forControlEvents:UIControlEventValueChanged];
-    [picker.widthAnchor constraintEqualToConstant:180].active = YES;
+    [picker.widthAnchor constraintEqualToConstant:260].active = YES;
 
     self.mathGame = [PSIMathGameView new];
     self.wordGame = [PSIWordGameView new];
+    self.patternGame = [PSIPatternGameView new];
 
-    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, picker, self.mathGame, self.wordGame]];
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, picker, self.mathGame, self.wordGame, self.patternGame]];
     stack.axis = UILayoutConstraintAxisVertical;
     stack.alignment = UIStackViewAlignmentCenter;
     stack.spacing = 12;
@@ -265,7 +269,8 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
         [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
         [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
         [self.mathGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-        [self.wordGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor]
+        [self.wordGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
+        [self.patternGame.widthAnchor constraintEqualToAnchor:stack.widthAnchor]
     ]];
 
     [self showGame:picker.selectedSegmentIndex];
@@ -282,6 +287,7 @@ static NSString *const PSIBrainBreakGameKey = @"brain_break_game";
     [self endEditing:YES];
     self.mathGame.hidden = index != 0;
     self.wordGame.hidden = index != 1;
+    self.patternGame.hidden = index != 2;
 }
 
 @end
