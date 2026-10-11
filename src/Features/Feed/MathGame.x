@@ -240,6 +240,9 @@ typedef NS_ENUM(NSInteger, PSIBrainBreakMode) {
 @interface PSIBrainBreakView : UIView
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) NSArray<UIView *> *games;
+// Games switched on in settings (indexes into games), and the modes the picker offers for them
+@property (nonatomic, strong) NSArray<NSNumber *> *enabledGames;
+@property (nonatomic, strong) NSArray<NSNumber *> *pickerModes;
 @property (nonatomic) PSIBrainBreakMode mode;
 @property (nonatomic) NSInteger currentGame;
 @end
@@ -254,13 +257,37 @@ typedef NS_ENUM(NSInteger, PSIBrainBreakMode) {
     self.titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightSemibold];
     self.titleLabel.textColor = [UIColor secondaryLabelColor];
 
-    NSInteger savedMode = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakModeKey];
-    self.mode = savedMode >= PSIBrainBreakModeShuffle && savedMode <= PSIBrainBreakModeIQ ? savedMode : PSIBrainBreakModeShuffle;
+    // Games can be switched off in settings; with none on, Math stays
+    NSArray *gameKeys = @[@"brain_break_math", @"brain_break_words", @"brain_break_iq"];
+    NSArray *gameNames = @[@"Math", @"Words", @"IQ"];
+    NSMutableArray *enabled = [NSMutableArray array];
+    for (NSUInteger i = 0; i < gameKeys.count; i++) {
+        if ([PSIUtils getBoolPref:gameKeys[i]]) [enabled addObject:@(i)];
+    }
+    if (enabled.count == 0) [enabled addObject:@0];
+    self.enabledGames = enabled;
 
-    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:@[@"Shuffle", @"Math", @"Words", @"IQ"]];
-    picker.selectedSegmentIndex = self.mode;
+    // Shuffle only makes sense with two or more games; with one, there's no picker at all
+    NSMutableArray *modes = [NSMutableArray array];
+    NSMutableArray *items = [NSMutableArray array];
+    if (enabled.count > 1) {
+        [modes addObject:@(PSIBrainBreakModeShuffle)];
+        [items addObject:@"Shuffle"];
+    }
+    for (NSNumber *game in enabled) {
+        [modes addObject:@(game.integerValue + 1)];
+        [items addObject:gameNames[game.integerValue]];
+    }
+    self.pickerModes = modes;
+
+    NSInteger savedMode = [[NSUserDefaults standardUserDefaults] integerForKey:PSIBrainBreakModeKey];
+    self.mode = [modes containsObject:@(savedMode)] ? savedMode : [modes.firstObject integerValue];
+
+    UISegmentedControl *picker = [[UISegmentedControl alloc] initWithItems:items];
+    picker.selectedSegmentIndex = [modes indexOfObject:@(self.mode)];
+    picker.hidden = modes.count < 2;
     [picker addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
-    [picker.widthAnchor constraintEqualToConstant:300].active = YES;
+    [picker.widthAnchor constraintEqualToConstant:MIN(300, 75 * items.count)].active = YES;
 
     self.games = @[[PSIMathGameView new], [PSIWordGameView new], [PSIPatternGameView new]];
 
@@ -294,7 +321,7 @@ typedef NS_ENUM(NSInteger, PSIBrainBreakMode) {
 }
 
 - (void)modeChanged:(UISegmentedControl *)picker {
-    self.mode = picker.selectedSegmentIndex;
+    self.mode = [self.pickerModes[picker.selectedSegmentIndex] integerValue];
     [[NSUserDefaults standardUserDefaults] setInteger:self.mode forKey:PSIBrainBreakModeKey];
     [self applyMode];
 }
@@ -312,8 +339,8 @@ typedef NS_ENUM(NSInteger, PSIBrainBreakMode) {
 - (void)showRandomGame {
     NSInteger game;
     do {
-        game = arc4random_uniform((uint32_t)self.games.count);
-    } while (game == self.currentGame);
+        game = [self.enabledGames[arc4random_uniform((uint32_t)self.enabledGames.count)] integerValue];
+    } while (game == self.currentGame && self.enabledGames.count > 1);
 
     [self showGame:game];
 }

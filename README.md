@@ -28,7 +28,7 @@ Every option can still be changed in the PSInstagram settings.
 - Instagram's crash-recovery "safe mode" is disabled, so it can't reset anything
 
 ### Brain break
-Shown on the home tab while the feed is hidden. **Shuffle** (the default) gives you a different game after every puzzle, or pick Math, Words or IQ to stay on one.
+Shown on the home tab while the feed is hidden. **Shuffle** (the default) gives you a different game after every puzzle, or pick Math, Words or IQ to stay on one. Games you don't want can be switched off in settings.
 
 **Math**
 - Five correct answers per level, with new problem types as you level up: `+`, `−`, `×`, missing numbers, `÷`, mixed operations, squares, powers, percentages, logarithms, roots, derivatives, integrals, limits, sums, binomial coefficients, 2×2 and 3×3 determinants, matrix traces, Laplace transforms, Gamma, double and improper integrals, modular arithmetic and complex numbers
@@ -40,9 +40,15 @@ Shown on the home tab while the feed is hidden. **Shuffle** (the default) gives 
 - Its own on-screen keyboard shows which letters you've ruled out
 
 **IQ**
-- Find the next number in a sequence: steps, doubling, squares, growing gaps, Fibonacci, cubes and primes, two sequences taking turns, and recursive rules, unlocking as you level up
-- Digit span: a number is shown for a few seconds, then typed back from memory. It grows longer each level, and from level 5 some have to be typed backwards
-- A wrong answer shows the rule behind the sequence
+Seven puzzle types, shuffled, that get harder as you level up:
+- **Number sequences**: what comes next? Steps, doubling, squares, growing gaps, Fibonacci, cubes and primes, two sequences taking turns, and recursive rules
+- **Digit span**: a number is shown for a few seconds, then typed back from memory; it grows longer each level, and from level 5 some have to be typed backwards
+- **Emoji equations**: 🍎 + 🍎 = 10, 🍎 + 🍌 = 8, 🍌 = ? Later with multiplication and order of operations
+- **Number grids**: a 3×3 grid following a rule along its rows or columns, with the last number missing
+- **Odd one out**: five numbers, one doesn't fit (not a square, not prime, not a multiple…); type its position
+- **Analogies**: 3 → 9, 5 → 25, 7 → ?
+- **Running total**: numbers and operations flash one at a time, then you type the result
+- A wrong answer shows the rule
 
 Progress and stats for all three games survive reinstalls, and the games can be turned off in settings.
 

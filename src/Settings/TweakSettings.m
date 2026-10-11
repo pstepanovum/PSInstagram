@@ -86,6 +86,15 @@
                                             ]
                                         },
                                         @{
+                                            @"header": @"Games",
+                                            @"footer": @"Only the games that are on appear at the top of Brain break. Shuffle needs at least two.",
+                                            @"rows": @[
+                                                [PSISetting switchCellWithTitle:@"Math" subtitle:@"From arithmetic to Laplace transforms" defaultsKey:@"brain_break_math" requiresRestart:YES],
+                                                [PSISetting switchCellWithTitle:@"Words" subtitle:@"Guess the five-letter word" defaultsKey:@"brain_break_words" requiresRestart:YES],
+                                                [PSISetting switchCellWithTitle:@"IQ" subtitle:@"Sequences, grids, emoji equations, memory and more" defaultsKey:@"brain_break_iq" requiresRestart:YES]
+                                            ]
+                                        },
+                                        @{
                                             @"header": @"Math",
                                             @"footer": @"Every 5 correct answers is a new level with harder problems.",
                                             @"rows": @[
@@ -115,7 +124,7 @@
                                         },
                                         @{
                                             @"header": @"IQ",
-                                            @"footer": @"Find the next number in a sequence, or remember a number and type it back (sometimes backwards). New puzzles unlock as you level up.",
+                                            @"footer": @"Seven puzzle types, shuffled: number sequences, digit memory, emoji equations, number grids, odd one out, analogies and running totals. They get harder as you level up.",
                                             @"rows": @[
                                                 [PSISetting staticCellWithTitle:[NSString stringWithFormat:@"Level %ld", (long)PSIPatternGame.level]
                                                                        subtitle:PSIPatternGame.statsDescription

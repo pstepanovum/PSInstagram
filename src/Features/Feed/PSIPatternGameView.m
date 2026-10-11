@@ -126,15 +126,20 @@ static CGFloat const PSIPatternMinFontSize = 18;
     self.answerField.text = @"";
     self.locked = NO;
 
-    if (self.puzzle.kind == PSIPatternKindDigitSpan) [self showDigits];
-    else [self showSequence];
+    switch (self.puzzle.kind) {
+        case PSIPatternKindDigitSpan: [self showDigits]; break;
+        case PSIPatternKindRunningTotal: [self showRunningTotal]; break;
+        case PSIPatternKindEmoji: [self showEmoji]; break;
+        default: [self showSequence]; break;
+    }
 
     [self updateStatus];
 }
 
 // Typeset the terms, shrinking them to fit; fall back to plain text if they can't be typeset
 - (void)showSequence {
-    self.instructionLabel.text = @"What comes next?";
+    self.instructionLabel.text = self.puzzle.prompt;
+    [self usePlainLabelForLines:NO];
     self.timerView.hidden = YES;
     self.answerField.enabled = YES;
     self.plainLabel.text = self.puzzle.text;
@@ -154,7 +159,8 @@ static CGFloat const PSIPatternMinFontSize = 18;
 
 // Show the number with a countdown, then hide it and ask for it
 - (void)showDigits {
-    self.instructionLabel.text = @"Remember this number";
+    self.instructionLabel.text = self.puzzle.prompt;
+    [self usePlainLabelForLines:NO];
     self.sequenceLabel.hidden = YES;
     self.plainLabel.hidden = NO;
     self.plainLabel.text = self.puzzle.text;
@@ -189,16 +195,82 @@ static CGFloat const PSIPatternMinFontSize = 18;
     });
 }
 
+// The plain label shows one big line (digits, running total steps) or several (emoji equations)
+- (void)usePlainLabelForLines:(BOOL)lines {
+    self.plainLabel.numberOfLines = lines ? 0 : 1;
+    self.plainLabel.font = lines ? [UIFont systemFontOfSize:26 weight:UIFontWeightMedium] : [UIFont monospacedDigitSystemFontOfSize:40 weight:UIFontWeightBold];
+    self.plainLabel.adjustsFontSizeToFitWidth = !lines;
+}
+
+// 🍎 + 🍎 = 10 … one equation per line
+- (void)showEmoji {
+    self.instructionLabel.text = self.puzzle.prompt;
+    [self usePlainLabelForLines:YES];
+    self.sequenceLabel.hidden = YES;
+    self.plainLabel.hidden = NO;
+    self.timerView.hidden = YES;
+    self.answerField.enabled = YES;
+
+    NSMutableParagraphStyle *style = [NSMutableParagraphStyle new];
+    style.lineSpacing = 8;
+    style.alignment = NSTextAlignmentCenter;
+    self.plainLabel.attributedText = [[NSAttributedString alloc] initWithString:self.puzzle.text attributes:@{NSParagraphStyleAttributeName: style}];
+}
+
+// The start number and each operation flash one after another, then the total is asked for
+- (void)showRunningTotal {
+    self.instructionLabel.text = self.puzzle.prompt;
+    [self usePlainLabelForLines:NO];
+    self.sequenceLabel.hidden = YES;
+    self.plainLabel.hidden = NO;
+    self.plainLabel.text = self.puzzle.steps.firstObject;
+
+    self.answerField.enabled = NO;
+    [self endEditing:YES];
+
+    self.timerView.hidden = NO;
+    [self.timerView setProgress:1 animated:NO];
+
+    NSInteger puzzleID = self.puzzleID;
+    NSArray<NSString *> *steps = self.puzzle.steps;
+    NSTimeInterval stepSeconds = self.puzzle.stepSeconds;
+    NSTimeInterval duration = stepSeconds * steps.count;
+    NSDate *start = [NSDate date];
+
+    [NSTimer scheduledTimerWithTimeInterval:0.05 repeats:YES block:^(NSTimer *timer) {
+        if (puzzleID != self.puzzleID) {
+            [timer invalidate];
+            return;
+        }
+
+        NSTimeInterval elapsed = -start.timeIntervalSinceNow;
+        if (elapsed >= duration) {
+            [timer invalidate];
+            self.timerView.hidden = YES;
+            self.plainLabel.text = @"= ?";
+            self.instructionLabel.text = @"What's the total?";
+            self.answerField.enabled = YES;
+            return;
+        }
+
+        NSUInteger index = MIN((NSUInteger)(elapsed / stepSeconds), steps.count - 1);
+        self.plainLabel.text = steps[index];
+        [self.timerView setProgress:1 - elapsed / duration animated:NO];
+    }];
+}
+
 // A digit span can start while the game is hidden (Shuffle shows another game first), so show the number again
 // from the start once the game becomes visible, unless it's already been answered
 - (void)setHidden:(BOOL)hidden {
     BOOL appearing = self.hidden && !hidden;
     [super setHidden:hidden];
 
-    if (appearing && self.puzzle.kind == PSIPatternKindDigitSpan && !self.locked) {
+    BOOL timed = self.puzzle.kind == PSIPatternKindDigitSpan || self.puzzle.kind == PSIPatternKindRunningTotal;
+    if (appearing && timed && !self.locked) {
         self.puzzleID++;
         self.answerField.text = @"";
-        [self showDigits];
+        if (self.puzzle.kind == PSIPatternKindDigitSpan) [self showDigits];
+        else [self showRunningTotal];
     }
 }
 
@@ -263,12 +335,21 @@ static CGFloat const PSIPatternMinFontSize = 18;
     [self updateStatus];
 
     NSString *solution;
-    if (self.puzzle.kind == PSIPatternKindDigitSpan) {
-        self.plainLabel.text = self.puzzle.text;
-        solution = self.puzzle.reversed ? [NSString stringWithFormat:@"Backwards: %@", self.puzzle.answer] : [NSString stringWithFormat:@"It was %@", self.puzzle.answer];
-    }
-    else {
-        solution = [NSString stringWithFormat:@"%@ · %@", self.puzzle.answer, self.puzzle.rule];
+    switch (self.puzzle.kind) {
+        case PSIPatternKindDigitSpan:
+            self.plainLabel.text = self.puzzle.text;
+            solution = self.puzzle.reversed ? [NSString stringWithFormat:@"Backwards: %@", self.puzzle.answer] : [NSString stringWithFormat:@"It was %@", self.puzzle.answer];
+            break;
+        case PSIPatternKindRunningTotal:
+            self.plainLabel.text = [@"= " stringByAppendingString:self.puzzle.answer];
+            solution = [NSString stringWithFormat:@"%@ = %@", self.puzzle.rule, self.puzzle.answer];
+            break;
+        case PSIPatternKindOddOneOut:
+            solution = [NSString stringWithFormat:@"Position %@ · %@", self.puzzle.answer, self.puzzle.rule];
+            break;
+        default:
+            solution = [NSString stringWithFormat:@"%@ · %@", self.puzzle.answer, self.puzzle.rule];
+            break;
     }
 
     [self showFeedback:solution color:[UIColor systemRedColor] thenNextAfter:2.2];

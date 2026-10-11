@@ -6,12 +6,25 @@ typedef NS_ENUM(NSInteger, PSIPatternKind) {
     // "2, 6, 12, 20, 30, ?"
     PSIPatternKindSequence,
     // A number shown for a few seconds, then typed back from memory
-    PSIPatternKindDigitSpan
+    PSIPatternKindDigitSpan,
+    // "🍎 + 🍎 = 10, 🍎 + 🍌 = 8, 🍌 = ?"
+    PSIPatternKindEmoji,
+    // A 3×3 grid following a rule, with the last number missing
+    PSIPatternKindGrid,
+    // Five numbers; the answer is the position (1–5) of the one that doesn't fit
+    PSIPatternKindOddOneOut,
+    // "3 → 9, 5 → 25, 7 → ?"
+    PSIPatternKindAnalogy,
+    // Numbers and operations shown one at a time, then the result is typed
+    PSIPatternKindRunningTotal
 };
 
 @interface PSIPatternPuzzle : NSObject
 
 @property (nonatomic, readonly) PSIPatternKind kind;
+
+// What the player is asked to do ("What comes next?")
+@property (nonatomic, copy, readonly) NSString *prompt;
 
 // Sequences: the terms with a blank at the end, as plain text and as LaTeX. Digit span: the number to remember
 @property (nonatomic, copy, readonly) NSString *text;
@@ -25,6 +38,10 @@ typedef NS_ENUM(NSInteger, PSIPatternKind) {
 // Digit span: how long the number is shown, and whether it must be typed backwards
 @property (nonatomic, readonly) NSTimeInterval displaySeconds;
 @property (nonatomic, readonly) BOOL reversed;
+
+// Running total: the steps shown one after another ("5", "+ 7", "× 2"), each for stepSeconds
+@property (nonatomic, copy, readonly, nullable) NSArray<NSString *> *steps;
+@property (nonatomic, readonly) NSTimeInterval stepSeconds;
 
 @end
 
